@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://bt8oqje54jhaq"]
+
+[ext_resource type="Script" uid="uid://bwkexuos6u20d" path="res://Scenes/piece.gd" id="1_jf0mb"]
+
+[node name="Piece" type="Node2D"]
+script = ExtResource("1_jf0mb")
+
+[node name="Icon" type="TextureRect" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
