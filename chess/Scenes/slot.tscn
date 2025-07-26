@@ -1,13 +1,18 @@
-[gd_scene format=3 uid="uid://c0rvk7m52b0s0"]
+[gd_scene load_steps=2 format=3 uid="uid://c0rvk7m52b0s0"]
+
+[ext_resource type="Script" uid="uid://b1if3hslferru" path="res://Scenes/slot.gd" id="1_luhj6"]
 
 [node name="Slot" type="ColorRect"]
+show_behind_parent = true
 custom_minimum_size = Vector2(45, 45)
 offset_right = 45.0
 offset_bottom = 45.0
+mouse_filter = 2
+script = ExtResource("1_luhj6")
 
 [node name="Filter" type="ColorRect" parent="."]
 custom_minimum_size = Vector2(45, 45)
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
-color = Color(1, 1, 1, 0)
+color = Color(0.933333, 0.933333, 0.823529, 0)

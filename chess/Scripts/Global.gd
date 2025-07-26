@@ -37,7 +37,3 @@ func pieceSprite(pieceType: int) -> Texture:
 		piece.KNIGHT | piece.BLACK: sprite = BLACK_KNIGHT
 		piece.PAWN | piece.BLACK: sprite = BLACK_PAWN
 	return sprite
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass

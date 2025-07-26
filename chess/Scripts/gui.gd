@@ -2,6 +2,7 @@ extends Control
 
 const SLOT : PackedScene = preload("res://Scenes/slot.tscn")
 const PIECE : PackedScene = preload("res://Scenes/piece.tscn")
+
 @onready var grid : GridContainer = $ChessBoard/GridContainer
 
 const CELL_WIDTH : int = 45
@@ -13,24 +14,51 @@ enum piece_type { NONE, KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, WHITE = 8, BLAC
 var piece_positions : Array = []
 var lightCol = Color8(238,238,210)
 var darkCol = Color8(118,150,86)
+var selectedPiece : Vector2i
+var moveState : bool = false
+var slots : Array = []
+var whiteTurn : bool = false
 
 func _ready() -> void:
 	make2dArray()
 	createGraphicalBoard()
 	LoadPositionFromFen(startFen)
-	updatePosition()
+	updatePosition(Vector2(-1, -1))
 
-func updatePosition() -> void:
+func _input(_event: InputEvent) -> void:
+	if Input.is_action_just_pressed("LMB"):
+		var temp = snapped(get_global_mouse_position() / CELL_WIDTH, Vector2(1, 1))
+		if !moveState && ((whiteTurn && (piece_positions[8-temp.y][temp.x-1] < 16)) || (!whiteTurn && piece_positions[8-temp.y][temp.x-1] > 16)):
+			if piece_positions[8 - temp.y][temp.x-1]:
+				selectedPiece = temp
+				moveState = true
+		elif moveState:
+			movePiece(temp)
+
+func movePiece(newPosition: Vector2i):
+	moveState = false
+	piece_positions[8 - newPosition.y][newPosition.x-1] = piece_positions[8 - selectedPiece.y][selectedPiece.x-1]
+	piece_positions[8 - selectedPiece.y][selectedPiece.x-1] = 0
+	updatePosition(newPosition)
+
+func updatePosition(newPosition: Vector2i) -> void:
+	for child in grid.get_children():
+		if child is Node2D:
+			child.queue_free()
+	
 	for rank in range(RANKS):
 		for file in range(FILES):
 			add_piece(piece_positions[rank][file], Vector2(CELL_WIDTH*file, CELL_WIDTH*(7-rank)))
-	pass
+	
+	whiteTurn = !whiteTurn
 
 func make2dArray():
 	for rank in range(RANKS):
 		piece_positions.append([])
-		for FILE in range(FILES):
+		slots.append([])
+		for file in range(FILES):
 			piece_positions[rank].append(0)
+			slots[rank].append(0)
 
 func LoadPositionFromFen(fen: String) -> void:
 	var pieceTypeFromSymbol : Dictionary = {
@@ -54,23 +82,23 @@ func LoadPositionFromFen(fen: String) -> void:
 				var pieceType: int  = pieceTypeFromSymbol[symbol.to_lower()]
 				piece_positions[rank][file] = pieceType | pieceColour
 				file += 1
-	pass
 
 func createGraphicalBoard():
 	for file in range(FILES):
 		for rank in range(RANKS):
 			var isLightSquare : bool = (file + rank) % 2 == 0
 			var squareColour : Color = lightCol if isLightSquare else darkCol
-			var SquarePosition = Vector2(CELL_WIDTH/2 * file, CELL_WIDTH/2 * rank)
-			DrawSquare(squareColour, SquarePosition)
+			var slot_id = Vector2i(file, rank)
+			DrawSquare(squareColour, slot_id)
 
-func DrawSquare(squareColor : Color, SquarePosition: Vector2):
+func DrawSquare(squareColor : Color, slot_id : Vector2i):
 	var slot_instance = SLOT.instantiate()
 	slot_instance.color = squareColor
-	slot_instance.position = SquarePosition
+	slot_instance.SLOT_ID = slot_id
+	slots[slot_id.x][slot_id.y] = slot_instance
 	grid.add_child(slot_instance)
 
-func add_piece(piece: int, piece_position: Vector2):
+func add_piece(piece: int, piece_position: Vector2i):
 	var piece_instance = PIECE.instantiate()
 	piece_instance.load_texture(piece)
 	piece_instance.position = piece_position
