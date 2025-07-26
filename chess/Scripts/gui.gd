@@ -18,12 +18,14 @@ var selectedPiece : Vector2i
 var moveState : bool = false
 var slots : Array = []
 var whiteTurn : bool = false
+var start : bool = false
+var hasColourChanged : bool = false
 
 func _ready() -> void:
 	make2dArray()
 	createGraphicalBoard()
 	LoadPositionFromFen(startFen)
-	updatePosition(Vector2(-1, -1))
+	updatePosition(Vector2(0, 0))
 
 func _input(_event: InputEvent) -> void:
 	if Input.is_action_just_pressed("LMB"):
@@ -39,9 +41,21 @@ func movePiece(newPosition: Vector2i):
 	moveState = false
 	piece_positions[8 - newPosition.y][newPosition.x-1] = piece_positions[8 - selectedPiece.y][selectedPiece.x-1]
 	piece_positions[8 - selectedPiece.y][selectedPiece.x-1] = 0
+	
+	if start:
+		slots[Global.pos1.y*8 + Global.pos1.x - 9].change_colour()
+		slots[Global.pos2.y*8 + Global.pos2.x - 9].change_colour()
+	
 	updatePosition(newPosition)
 
 func updatePosition(newPosition: Vector2i) -> void:
+	if start:
+		slots[selectedPiece.y*8 + selectedPiece.x - 9].change_colour()
+		slots[newPosition.y*8 + newPosition.x - 9].change_colour()
+		
+		Global.pos1 = selectedPiece
+		Global.pos2 = newPosition
+	
 	for child in grid.get_children():
 		if child is Node2D:
 			child.queue_free()
@@ -51,14 +65,13 @@ func updatePosition(newPosition: Vector2i) -> void:
 			add_piece(piece_positions[rank][file], Vector2(CELL_WIDTH*file, CELL_WIDTH*(7-rank)))
 	
 	whiteTurn = !whiteTurn
+	start = true
 
 func make2dArray():
 	for rank in range(RANKS):
 		piece_positions.append([])
-		slots.append([])
 		for file in range(FILES):
 			piece_positions[rank].append(0)
-			slots[rank].append(0)
 
 func LoadPositionFromFen(fen: String) -> void:
 	var pieceTypeFromSymbol : Dictionary = {
@@ -94,8 +107,7 @@ func createGraphicalBoard():
 func DrawSquare(squareColor : Color, slot_id : Vector2i):
 	var slot_instance = SLOT.instantiate()
 	slot_instance.color = squareColor
-	slot_instance.SLOT_ID = slot_id
-	slots[slot_id.x][slot_id.y] = slot_instance
+	slots.append(slot_instance)
 	grid.add_child(slot_instance)
 
 func add_piece(piece: int, piece_position: Vector2i):
