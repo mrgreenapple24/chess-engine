@@ -42,6 +42,8 @@ func movePiece(newPosition: Vector2i):
 	piece_positions[8 - newPosition.y][newPosition.x-1] = piece_positions[8 - selectedPiece.y][selectedPiece.x-1]
 	piece_positions[8 - selectedPiece.y][selectedPiece.x-1] = 0
 	
+	Global.update_bitboards(newPosition, selectedPiece)
+
 	if start:
 		slots[Global.pos1.y*8 + Global.pos1.x - 9].change_colour()
 		slots[Global.pos2.y*8 + Global.pos2.x - 9].change_colour()
@@ -74,6 +76,8 @@ func make2dArray():
 			piece_positions[rank].append(0)
 
 func LoadPositionFromFen(fen: String) -> void:
+	Global.resetBitBoards()
+	
 	var pieceTypeFromSymbol : Dictionary = {
 		'k' = piece_type.KING, 'p' = piece_type.PAWN, 'q' = piece_type.QUEEN,
 		'r' = piece_type.ROOK, 'n' = piece_type.KNIGHT, 'b' = piece_type.BISHOP
@@ -94,6 +98,10 @@ func LoadPositionFromFen(fen: String) -> void:
 				var pieceColour : int = piece_type.WHITE if symbol.to_upper() == symbol else piece_type.BLACK
 				var pieceType: int  = pieceTypeFromSymbol[symbol.to_lower()]
 				piece_positions[rank][file] = pieceType | pieceColour
+				var square_index = rank * 8 + file
+				var bit = 1 << square_index
+				
+				Global.update_bitboard_from_fen(pieceType | pieceColour, bit)
 				file += 1
 
 func createGraphicalBoard():
@@ -101,10 +109,9 @@ func createGraphicalBoard():
 		for rank in range(RANKS):
 			var isLightSquare : bool = (file + rank) % 2 == 0
 			var squareColour : Color = lightCol if isLightSquare else darkCol
-			var slot_id = Vector2i(file, rank)
-			DrawSquare(squareColour, slot_id)
+			DrawSquare(squareColour)
 
-func DrawSquare(squareColor : Color, slot_id : Vector2i):
+func DrawSquare(squareColor : Color):
 	var slot_instance = SLOT.instantiate()
 	slot_instance.color = squareColor
 	slots.append(slot_instance)
